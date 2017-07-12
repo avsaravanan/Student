@@ -1,15 +1,22 @@
 package com.student.demo.controller;
 
-
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -17,6 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.student.demo.bean.*;
 import com.student.demo.service.*;
+import com.student.demo.util.*;
 
 @CrossOrigin(maxAge = 3600)
 @Controller
@@ -48,6 +56,16 @@ public class StudentManagementController {
 	@CrossOrigin(origins = "http://localhost:4200")
 	@RequestMapping(path="/getstudents", method = RequestMethod.GET)
 	public @ResponseBody Iterable<Student> getAllStudents() {
+		StudentUtil sutil = new StudentUtil();
+		List<State> slist = sutil.getStates();
+		Collections.sort(slist,	new State());
+		Iterator<State> iter = slist.iterator();
+		if(!slist.isEmpty()){
+			for(int i=0;i<slist.size();i++){
+				System.out.println("### :"+ iter.next().getStateName());
+			}
+		}
+		
 		LOG.info("### executing getAllStudents..");
 		return studentService.listStudents();
 	}
@@ -77,21 +95,26 @@ public class StudentManagementController {
 	
 	
 	@RequestMapping(value = "/createstudent", method = RequestMethod.POST)
-	@ResponseBody
-	public String createStudent(Student student) {
+	public ResponseEntity<?> createStudent(@RequestBody Student student) {
 		LOG.info("### Student First name: "+student.getFirst_name());
 		studentService.createStudent(student);
 
-		return "Confirm";
+		HttpHeaders headers = new HttpHeaders();
+		return new ResponseEntity<String>(headers, HttpStatus.CREATED);
 	}
 	
-	@RequestMapping(value = "/updatestudent", method = RequestMethod.POST)
-	@ResponseBody
-	public String updateStudent(Student student) {
-		
+	@CrossOrigin(origins = "http://localhost:4200")
+	@Modifying
+	@RequestMapping(value = "/updatestudent", method = RequestMethod.PUT)
+	public ResponseEntity<?> updateStudent(@RequestBody Student student) {
+		LOG.info("### Student First name: "+student.getId()+" "+student.getFirst_name() +" "+student.getLast_name()+" "+student.getEmail());
+		//student.setId(student.getId());
+		//student.setFirst_name(student.getFirst_name());
+		//student.setLast_name(student.getLast_name());
+		//student.setEmail(student.getEmail());
 		studentService.updateStudent(student);
-
-		return "Confirm";
+		HttpHeaders headers = new HttpHeaders();
+		return new ResponseEntity<String>(headers, HttpStatus.CREATED);
 	}
 	
 	@CrossOrigin(origins = "http://localhost:4200")
